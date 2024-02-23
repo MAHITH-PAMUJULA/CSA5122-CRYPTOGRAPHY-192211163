@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#define SIZE 5
+void prepareKey(char key[], char keyMatrix[SIZE][SIZE]) {
+    char *ptr = key, alphabet[26] = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+    int i, j, k = 0;
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (*ptr) {
+                keyMatrix[i][j] = *ptr++;
+                for (k = 0; k < 25; k++) {
+                    if (alphabet[k] == keyMatrix[i][j]) {
+                        alphabet[k] = 0;
+                        break;
+                    }
+                }
+            } else {
+                while (alphabet[k] == 0) k++;
+                keyMatrix[i][j] = alphabet[k++];
+            }
+        }
+    }
+}
+void findPosition(char ch, char keyMatrix[SIZE][SIZE], int *row, int *col) {
+    if (ch == 'J') ch = 'I';
+    int i, j;
+    for (i = 0; i < SIZE; i++)
+        for (j = 0; j < SIZE; j++)
+            if (keyMatrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+}
+void encryptDigraph(char digraph[], char keyMatrix[SIZE][SIZE]) {
+    char a = digraph[0], b = digraph[1];
+    int row1, row2, col1, col2;
+    findPosition(a, keyMatrix, &row1, &col1);
+    findPosition(b, keyMatrix, &row2, &col2);
+    if (row1 == row2) {
+        digraph[0] = keyMatrix[row1][(col1 + 1) % SIZE];
+        digraph[1] = keyMatrix[row2][(col2 + 1) % SIZE];
+    } else if (col1 == col2) {
+        digraph[0] = keyMatrix[(row1 + 1) % SIZE][col1];
+        digraph[1] = keyMatrix[(row2 + 1) % SIZE][col2];
+    } else {
+        digraph[0] = keyMatrix[row1][col2];
+        digraph[1] = keyMatrix[row2][col1];
+    }
+}
+int main() {
+    char key[25], plaintext[100], keyMatrix[SIZE][SIZE];
+    int i, k = 0;
+    printf("Enter the key (no 'J' letter):\n");
+    gets(key);
+    printf("Enter the plaintext:\n");
+    gets(plaintext);
+    for (i = 0; plaintext[i] != '\0'; i++)
+        if (isalpha(plaintext[i]))
+            plaintext[k++] = toupper(plaintext[i]);
+    plaintext[k] = '\0';
+    prepareKey(key, keyMatrix);
+    for (i = 0; i < strlen(plaintext); i += 2)
+        encryptDigraph(&plaintext[i], keyMatrix);
+    printf("Encrypted text: %s\n", plaintext);
+    return 0;
+}
